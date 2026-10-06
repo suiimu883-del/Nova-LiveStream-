@@ -52,8 +52,9 @@
     video {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       display: none;
+      background: #000;
     }
 
     .offline {
@@ -64,6 +65,18 @@
       justify-content: center;
       text-align: center;
       flex-direction: column;
+    }
+
+    .live-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: #ff304f;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      display: none;
+      z-index: 5;
     }
 
     .buttons {
@@ -81,12 +94,22 @@
       cursor: pointer;
     }
 
-    #startBtn {
+    #cameraBtn {
+      background: #292934;
+      color: white;
+    }
+
+    #screenBtn {
+      background: #1877f2;
+      color: white;
+    }
+
+    #goLiveBtn {
       background: #ff304f;
       color: white;
     }
 
-    #stopBtn {
+    #endLiveBtn {
       background: #292934;
       color: white;
       display: none;
@@ -103,13 +126,21 @@
       margin-top: 8px;
       color: #aaa;
     }
+
+    .viewer {
+      margin-top: 10px;
+      color: #aaa;
+    }
   </style>
 </head>
 
 <body>
 
 <header>
-  <div class="logo">🔴 Nova <span class="red">LiveStream</span></div>
+  <div class="logo">
+    🔴 Nova <span class="red">LiveStream</span>
+  </div>
+
   <div>👤 User</div>
 </header>
 
@@ -119,99 +150,288 @@
 
     <video id="camera" autoplay muted playsinline></video>
 
+    <video id="screenPreview" autoplay muted playsinline></video>
+
+    <div class="live-badge" id="liveBadge">
+      🔴 LIVE
+    </div>
+
     <div class="offline" id="offline">
-      <h2>📺 Live Stream</h2>
-      <p>Camera is currently off</p>
+      <h2>📺 Nova LiveStream</h2>
+      <p>Select Camera or Screen Share</p>
     </div>
 
   </div>
 
   <div class="buttons">
 
-    <button id="startBtn" onclick="startCamera()">
-      🔴 Start Camera
+    <button id="cameraBtn" onclick="startCamera()">
+      📷 Camera
     </button>
 
-    <button id="stopBtn" onclick="stopCamera()">
-      ⏹ Stop Camera
+    <button id="screenBtn" onclick="startScreenShare()">
+      📱 Screen Share
+    </button>
+
+    <button id="goLiveBtn" onclick="goLive()">
+      🔴 Go Live
+    </button>
+
+    <button id="endLiveBtn" onclick="endLive()">
+      🛑 End Live
     </button>
 
   </div>
 
   <div class="info">
+
     <h2>Nova LiveStream</h2>
-    <p>Camera & microphone test</p>
+
+    <p>Camera, microphone and Android screen sharing</p>
 
     <div class="status">
-      Status: <span id="status">Offline</span>
+      Status:
+      <span id="status">Offline</span>
     </div>
+
+    <div class="viewer">
+      👀 Viewers:
+      <span id="viewerCount">0</span>
+    </div>
+
   </div>
 
 </div>
 
 <script>
 
-let stream = null;
+let cameraStream = null;
+let screenStream = null;
+let activeStream = null;
+let isLive = false;
+
+
+/* CAMERA */
 
 async function startCamera() {
 
   try {
 
-    stream = await navigator.mediaDevices.getUserMedia({
+    stopAllStreams();
+
+    cameraStream = await navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true
     });
 
+    activeStream = cameraStream;
+
     const video = document.getElementById("camera");
 
-    video.srcObject = stream;
+    video.srcObject = cameraStream;
     video.style.display = "block";
 
+    document.getElementById("screenPreview").style.display = "none";
     document.getElementById("offline").style.display = "none";
 
-    document.getElementById("startBtn").style.display = "none";
-    document.getElementById("stopBtn").style.display = "inline-block";
-
-    document.getElementById("status").innerText = "Camera & Microphone ON";
+    document.getElementById("status").innerText =
+      "Camera & Microphone ON";
 
   } catch (error) {
 
     alert(
-      "Camera/Microphone permission is required.\n\n" +
-      "Please allow Camera and Microphone access."
+      "Camera/Microphone permission is required."
     );
 
     console.log(error);
+  }
+}
+
+
+/* SCREEN SHARE */
+
+async function startScreenShare() {
+
+  try {
+
+    stopAllStreams();
+
+    screenStream = await navigator.mediaDevices.getDisplayMedia({
+
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 }
+      },
+
+      audio: true
+    });
+
+    activeStream = screenStream;
+
+    const video = document.getElementById("screenPreview");
+
+    video.srcObject = screenStream;
+    video.style.display = "block";
+
+    document.getElementById("camera").style.display = "none";
+    document.getElementById("offline").style.display = "none";
+
+    document.getElementById("status").innerText =
+      "Screen Share Ready";
+
+    const track = screenStream.getVideoTracks()[0];
+
+    if (track) {
+
+      track.addEventListener("ended", () => {
+
+        if (!isLive) {
+          stopScreenShare();
+        }
+
+      });
+
+    }
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert(
+      "Screen sharing cancelled or not supported."
+    );
 
   }
+}
+
+
+/* GO LIVE */
+
+function goLive() {
+
+  if (!activeStream) {
+
+    alert(
+      "First select Camera or Screen Share."
+    );
+
+    return;
+  }
+
+  isLive = true;
+
+  document.getElementById("liveBadge").style.display =
+    "block";
+
+  document.getElementById("goLiveBtn").style.display =
+    "none";
+
+  document.getElementById("endLiveBtn").style.display =
+    "inline-block";
+
+  document.getElementById("status").innerText =
+    "LIVE";
+
+  document.getElementById("viewerCount").innerText =
+    "1";
 
 }
 
-function stopCamera() {
 
-  if (stream) {
+/* END LIVE */
 
-    stream.getTracks().forEach(track => track.stop());
+function endLive() {
 
-    stream = null;
+  isLive = false;
 
+  document.getElementById("liveBadge").style.display =
+    "none";
+
+  document.getElementById("goLiveBtn").style.display =
+    "inline-block";
+
+  document.getElementById("endLiveBtn").style.display =
+    "none";
+
+  document.getElementById("status").innerText =
+    "Offline";
+
+  document.getElementById("viewerCount").innerText =
+    "0";
+
+  stopAllStreams();
+
+  document.getElementById("offline").style.display =
+    "flex";
+
+}
+
+
+/* STOP SCREEN */
+
+function stopScreenShare() {
+
+  if (screenStream) {
+
+    screenStream.getTracks().forEach(track => {
+      track.stop();
+    });
+
+    screenStream = null;
   }
 
-  const video = document.getElementById("camera");
+  activeStream = null;
 
-  video.srcObject = null;
-  video.style.display = "none";
+  document.getElementById("screenPreview").srcObject =
+    null;
 
-  document.getElementById("offline").style.display = "flex";
+  document.getElementById("screenPreview").style.display =
+    "none";
 
-  document.getElementById("startBtn").style.display = "inline-block";
-  document.getElementById("stopBtn").style.display = "none";
+  document.getElementById("offline").style.display =
+    "flex";
 
-  document.getElementById("status").innerText = "Offline";
+  document.getElementById("status").innerText =
+    "Offline";
+}
 
+
+/* STOP ALL */
+
+function stopAllStreams() {
+
+  if (cameraStream) {
+
+    cameraStream.getTracks().forEach(track => {
+      track.stop();
+    });
+
+    cameraStream = null;
+  }
+
+  if (screenStream) {
+
+    screenStream.getTracks().forEach(track => {
+      track.stop();
+    });
+
+    screenStream = null;
+  }
+
+  activeStream = null;
+
+  document.getElementById("camera").srcObject = null;
+  document.getElementById("screenPreview").srcObject = null;
+
+  document.getElementById("camera").style.display =
+    "none";
+
+  document.getElementById("screenPreview").style.display =
+    "none";
 }
 
 </script>
 
 </body>
-</html>
+  </html>
