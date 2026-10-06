@@ -2,36 +2,51 @@ let mediaStream = null;
 
 async function startScreenShare() {
     try {
+        // Browser support check
+        if (!navigator.mediaDevices) {
+            throw new Error("mediaDevices is not available");
+        }
+
+        if (!navigator.mediaDevices.getDisplayMedia) {
+            throw new Error("getDisplayMedia is not supported by this browser");
+        }
+
+        // Screen capture
         mediaStream = await navigator.mediaDevices.getDisplayMedia({
-            video: {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                frameRate: { ideal: 30 }
-            },
+            video: true,
             audio: true
         });
 
-        const video = document.getElementById("livePreview");
+        const video = document.getElementById("screenPreview");
 
-        if (video) {
-            video.srcObject = mediaStream;
-            video.muted = true;
-            await video.play();
+        if (!video) {
+            throw new Error("screenPreview element not found");
         }
 
-        const videoTrack = mediaStream.getVideoTracks()[0];
+        video.srcObject = mediaStream;
+        video.style.display = "block";
+        video.muted = true;
 
-        if (videoTrack) {
-            videoTrack.addEventListener("ended", () => {
+        document.getElementById("camera").style.display = "none";
+        document.getElementById("offline").style.display = "none";
+        document.getElementById("status").innerText =
+            "Screen Share Ready";
+
+        const track = mediaStream.getVideoTracks()[0];
+
+        if (track) {
+            track.addEventListener("ended", () => {
                 stopScreenShare();
             });
         }
 
-        console.log("Screen sharing started");
-
     } catch (error) {
-        console.error("Screen sharing failed:", error);
-        alert("Screen sharing cancelled or not supported.");
+        console.error("Screen Share Error:", error);
+
+        alert(
+            "Screen Share কাজ করছে না.\n\n" +
+            "কারণ: " + error.message
+        );
     }
 }
 
@@ -41,11 +56,13 @@ function stopScreenShare() {
         mediaStream = null;
     }
 
-    const video = document.getElementById("livePreview");
+    const video = document.getElementById("screenPreview");
 
     if (video) {
         video.srcObject = null;
+        video.style.display = "none";
     }
 
-    console.log("Screen sharing stopped");
-              }
+    document.getElementById("offline").style.display = "flex";
+    document.getElementById("status").innerText = "Offline";
+        }
