@@ -1,13 +1,137 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StreamNova Live</title>
+  <title>Nova LiveStream</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b0b0f;
+      color: white;
+    }
+
+    header {
+      padding: 16px 20px;
+      background: #15151d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .live {
+      color: #ff304f;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .video {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #181820;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .video h2 {
+      color: #aaa;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .go-live {
+      background: #ff304f;
+      color: white;
+    }
+
+    .watch {
+      background: #292934;
+      color: white;
+    }
+
+    .info {
+      margin-top: 20px;
+      background: #15151d;
+      padding: 18px;
+      border-radius: 12px;
+    }
+
+    .viewer {
+      color: #aaa;
+      margin-top: 8px;
+    }
+  </style>
 </head>
+
 <body>
-  <h1>🔴 StreamNova Live</h1>
-  <p>Welcome to StreamNova Live!</p>
-  <button>Go Live</button>
+
+<header>
+  <div class="logo">🔴 Nova <span class="live">LiveStream</span></div>
+  <div>👤 User</div>
+</header>
+
+<div class="container">
+
+  <div class="video">
+    <div>
+      <h2>📺 Live Stream</h2>
+      <p>Your live video will appear here</p>
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button class="go-live" onclick="goLive()">🔴 Go Live</button>
+    <button class="watch" onclick="watchLive()">▶ Watch Live</button>
+  </div>
+
+  <div class="info">
+    <h2>Nova LiveStream</h2>
+    <p>Welcome to Nova LiveStream.</p>
+    <div class="viewer">👀 Viewers: <span id="viewers">0</span></div>
+  </div>
+
+</div>
+
+<script>
+  function goLive() {
+    alert("Go Live feature will be connected next!");
+  }
+
+  function watchLive() {
+    alert("Live stream is currently offline.");
+  }
+</script>
+
 </body>
-</html>
+  </html>
