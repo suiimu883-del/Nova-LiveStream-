@@ -18,7 +18,7 @@
     }
 
     header {
-      padding: 16px 20px;
+      padding: 15px 18px;
       background: #15151d;
       display: flex;
       justify-content: space-between;
@@ -26,33 +26,44 @@
     }
 
     .logo {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: bold;
     }
 
-    .live {
+    .red {
       color: #ff304f;
     }
 
     .container {
       max-width: 1000px;
       margin: auto;
-      padding: 20px;
+      padding: 15px;
     }
 
-    .video {
+    .video-box {
       width: 100%;
       aspect-ratio: 16 / 9;
       background: #181820;
       border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .offline {
+      position: absolute;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-    }
-
-    .video h2 {
-      color: #aaa;
+      flex-direction: column;
     }
 
     .buttons {
@@ -63,33 +74,34 @@
     }
 
     button {
-      border: 0;
-      padding: 12px 20px;
+      border: none;
+      padding: 12px 18px;
       border-radius: 8px;
       font-size: 15px;
       cursor: pointer;
     }
 
-    .go-live {
+    #startBtn {
       background: #ff304f;
       color: white;
     }
 
-    .watch {
+    #stopBtn {
       background: #292934;
       color: white;
+      display: none;
     }
 
     .info {
-      margin-top: 20px;
-      background: #15151d;
+      margin-top: 18px;
       padding: 18px;
+      background: #15151d;
       border-radius: 12px;
     }
 
-    .viewer {
-      color: #aaa;
+    .status {
       margin-top: 8px;
+      color: #aaa;
     }
   </style>
 </head>
@@ -97,41 +109,109 @@
 <body>
 
 <header>
-  <div class="logo">🔴 Nova <span class="live">LiveStream</span></div>
+  <div class="logo">🔴 Nova <span class="red">LiveStream</span></div>
   <div>👤 User</div>
 </header>
 
 <div class="container">
 
-  <div class="video">
-    <div>
+  <div class="video-box">
+
+    <video id="camera" autoplay muted playsinline></video>
+
+    <div class="offline" id="offline">
       <h2>📺 Live Stream</h2>
-      <p>Your live video will appear here</p>
+      <p>Camera is currently off</p>
     </div>
+
   </div>
 
   <div class="buttons">
-    <button class="go-live" onclick="goLive()">🔴 Go Live</button>
-    <button class="watch" onclick="watchLive()">▶ Watch Live</button>
+
+    <button id="startBtn" onclick="startCamera()">
+      🔴 Start Camera
+    </button>
+
+    <button id="stopBtn" onclick="stopCamera()">
+      ⏹ Stop Camera
+    </button>
+
   </div>
 
   <div class="info">
     <h2>Nova LiveStream</h2>
-    <p>Welcome to Nova LiveStream.</p>
-    <div class="viewer">👀 Viewers: <span id="viewers">0</span></div>
+    <p>Camera & microphone test</p>
+
+    <div class="status">
+      Status: <span id="status">Offline</span>
+    </div>
   </div>
 
 </div>
 
 <script>
-  function goLive() {
-    alert("Go Live feature will be connected next!");
+
+let stream = null;
+
+async function startCamera() {
+
+  try {
+
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    });
+
+    const video = document.getElementById("camera");
+
+    video.srcObject = stream;
+    video.style.display = "block";
+
+    document.getElementById("offline").style.display = "none";
+
+    document.getElementById("startBtn").style.display = "none";
+    document.getElementById("stopBtn").style.display = "inline-block";
+
+    document.getElementById("status").innerText = "Camera & Microphone ON";
+
+  } catch (error) {
+
+    alert(
+      "Camera/Microphone permission is required.\n\n" +
+      "Please allow Camera and Microphone access."
+    );
+
+    console.log(error);
+
   }
 
-  function watchLive() {
-    alert("Live stream is currently offline.");
+}
+
+function stopCamera() {
+
+  if (stream) {
+
+    stream.getTracks().forEach(track => track.stop());
+
+    stream = null;
+
   }
+
+  const video = document.getElementById("camera");
+
+  video.srcObject = null;
+  video.style.display = "none";
+
+  document.getElementById("offline").style.display = "flex";
+
+  document.getElementById("startBtn").style.display = "inline-block";
+  document.getElementById("stopBtn").style.display = "none";
+
+  document.getElementById("status").innerText = "Offline";
+
+}
+
 </script>
 
 </body>
-  </html>
+</html>
